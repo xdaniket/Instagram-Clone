@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -10,11 +10,27 @@ import axios from "axios";
 const CreatePost = () => {
   const [userSelectImages, setUserSelectImages] = useState();
   const [uploadImages, setUploadImages] = useState([]);
+  const [showImg, setShowImg] = useState([]);
   const [filePreview, setFilePreview] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [filterClass, setFilterClass] = useState("");
   const [gridVisible, setGridVisible] = useState(false);
   const [captionInputVisible, setCaptionInputVisible] = useState(false);
+
+  useEffect(() => {
+    const url = "http://localhost:4000/post/list?userId=1234";
+    axios.get(url).then((response) => {
+      response.data.data.results[0].response.map((item) => {
+        return item.attachments.map((itemNxt) => {
+          return setShowImg((prevState) => [
+            ...prevState,
+            itemNxt.url,
+            { description: item.description },
+          ]);
+        });
+      });
+    });
+  }, []);
 
   const handleSelectImagesByUser = (e) => {
     setUserSelectImages(URL.createObjectURL(e.target.files[0]));
@@ -54,8 +70,8 @@ const CreatePost = () => {
       })
       .then((res) => {
         axios.post("http://localhost:4000/post", {
-          userId: "2025",
-          description: "this is testing only",
+          userId: "1234",
+          description: captionInputVisible,
           attachments: res.data,
         });
       });
@@ -162,6 +178,15 @@ const CreatePost = () => {
               <h3>{item.caption}</h3>
             </div>
           </>
+        );
+      })}
+
+      {showImg.map((items, index) => {
+        return (
+          <div className="showImgDiv" key={index}>
+            <img src={`http://${items}`} alt="" width={"400px"} />
+            <h3>{items.description}</h3>
+          </div>
         );
       })}
     </div>
